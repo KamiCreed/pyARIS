@@ -13,7 +13,7 @@ import struct, array, pytz, datetime, tqdm
 import subprocess as sp
 from PIL import Image, ImageFont, ImageDraw
 import numpy as np
-import beamLookUp
+from pyARIS import beamLookUp
 
 #print __doc__
 
@@ -713,7 +713,7 @@ def remapARIS(ARISFile, frame, frameBuffer = None):
     #Add to frame data
     frame.remap = Remap.astype('uint8')
     
-def VideoExport(data, filename, fps = 24.0, start_frame = 1, end_frame = None, timestamp = False, fontsize = 30, ts_pos = (0,0)):
+def VideoExport(data, filename, fps = 24.0, start_frame = 1, end_frame = None, timestamp = False, fontsize = 30, ts_pos = (0,0), vbr = 20):
     """Output video using the ffmpeg pipeline. The current implementation 
     outputs compresses png files and outputs a mp4.
     
@@ -726,6 +726,7 @@ def VideoExport(data, filename, fps = 24.0, start_frame = 1, end_frame = None, t
     timestamp : (Bool) Add the timestamp from the sonar to the video frames
     fontsize : (Int) Size of timestamp font 
     ts_pos : (Tuple) (x,y) location of the timestamp
+    vbr : (Int) Variable Bitrate of output video (1-31) 1 being highest quality, 31 being lowest quality
     
     Returns
     -------
@@ -744,7 +745,7 @@ def VideoExport(data, filename, fps = 24.0, start_frame = 1, end_frame = None, t
     """
     
     #Command to send via the command prompt which specifies the pipe parameters
-    command = ['ffmpeg.exe',
+    command = ['ffmpeg',
            '-y', # (optional) overwrite output file if it exists
            '-f', 'image2pipe',
            '-vcodec','mjpeg',
@@ -753,6 +754,7 @@ def VideoExport(data, filename, fps = 24.0, start_frame = 1, end_frame = None, t
            '-r', str(fps), # frames per second
            '-i', '-', # The input comes from a pipe
            '-an', # Tells FFMPEG not to expect any audio
+           '-qscale:v', str(vbr),
            '-vcodec', 'mpeg4',
            filename]
 
